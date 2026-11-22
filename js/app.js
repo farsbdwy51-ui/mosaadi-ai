@@ -3,7 +3,7 @@
 import { createMemoryStore, MEMORY_CATEGORIES } from './memory.js';
 import { createTaskStore } from './tasks.js';
 import { createToolRegistry, CODE_RUNNER_WORKER_SOURCE } from './tools.js';
-import { createAgent, detectIntent } from './agent.js';
+import { createAgent, detectIntent } from './agent.js?v=team1';
 import { createSpeech } from './speech.js';
 import { createSettings, CONNECTIONS } from './settings.js';
 import { createLLM } from './llm.js?v=team1';
@@ -600,4 +600,4 @@ function createTeamAgent(deps) {
       } finally { running = false; }
     },
   };
-            }
+}
