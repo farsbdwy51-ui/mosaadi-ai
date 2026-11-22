@@ -1,7 +1,7 @@
 // llm.js — موصّل OpenRouter (اختياري). المفتاح من الإعدادات فقط، لا يوجد أي مفتاح في الكود.
 
 const SETTINGS_KEY = 'mosaadi.settings.v1';
-const DEFAULT_MODEL = 'google/gemini-2.0-flash-001';
+const DEFAULT_MODEL = 'openrouter/free';
 
 export function createLLM({ settings } = {}) {
   function getSettings() {
@@ -20,7 +20,9 @@ export function createLLM({ settings } = {}) {
 
   function getModel() {
     const s = getSettings();
-    return (s.openrouterModel && String(s.openrouterModel).trim()) || DEFAULT_MODEL;
+    const model = (s.openrouterModel && String(s.openrouterModel).trim()) || DEFAULT_MODEL;
+    // Existing paid-model preferences migrate safely to the free router.
+    return model === DEFAULT_MODEL || model.endsWith(':free') ? model : DEFAULT_MODEL;
   }
 
   async function complete(prompt, { maxTokens = 800, temperature = 0.4 } = {}) {
@@ -29,20 +31,21 @@ export function createLLM({ settings } = {}) {
     if (!key) throw new Error('لا يوجد مفتاح OpenRouter — أضِفه من الإعدادات');
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
+      signal: AbortSignal.timeout(45000),
       headers: {
         'Content-Type': 'application/json',
         Authorization: 'Bearer ' + key,
       },
       body: JSON.stringify({
         model: getModel(),
+        provider: { max_price: { prompt: 0, completion: 0 } },
         messages: [{ role: 'user', content: prompt }],
         max_tokens: maxTokens,
         temperature,
       }),
     });
     if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      throw new Error('فشل طلب النموذج (' + res.status + '): ' + body.slice(0, 200));
+      throw new Error('فشل طلب النموذج المجاني (' + res.status + '). راجع المفتاح أو حدود الخدمة.');
     }
     const data = await res.json();
     const text = data && data.choices && data.choices[0] && data.choices[0].message
