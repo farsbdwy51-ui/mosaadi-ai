@@ -1,6 +1,6 @@
 // sw.js — Service Worker: تخزين واجهة التطبيق للعمل دون اتصال
 // عند تغيير الكود ارفع رقم الإصدار حتى يتحدث العملاء القدامى فورًا.
-const CACHE_VERSION = 2;
+const CACHE_VERSION = 3;
 const CACHE = `mosaadi-ai-v${CACHE_VERSION}`;
 const CACHE_PREFIX = 'mosaadi-ai-';
 
