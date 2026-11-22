@@ -1,0 +1,11 @@
+{
+  "name": "mosaadi-ai",
+  "version": "1.0.0",
+  "description": "مساعدي AI — مساعد شخصي صوتي بالعربية يعمل في المتصفح",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "start": "node server.js"
+  },
+  "license": "MIT"
+}

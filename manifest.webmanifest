@@ -1,0 +1,19 @@
+{
+  "name": "مساعدي AI — المساعد الشخصي الذكي",
+  "short_name": "مساعدي AI",
+  "description": "مساعد صوتي شخصي بالعربية: يفهم، يخطط، ينفّذ — على جهازك.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

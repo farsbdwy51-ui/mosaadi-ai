@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>مساعدي AI — المساعد الشخصي الذكي</title>
+  <meta name="description" content="مساعد صوتي شخصي بالعربية: يفهم أوامرك، يخطط، ينفّذ — ويعمل على جهازك." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>مساعدي <span class="brand">AI</span></h1>
+    <span id="status-pill" class="pill" data-state="idle">جاهز</span>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="chat">المحادثة</button>
+    <button class="tab-btn" data-tab="tasks">المهام</button>
+    <button class="tab-btn" data-tab="memory">الذاكرة</button>
+    <button class="tab-btn" data-tab="tools">الأدوات</button>
+    <button class="tab-btn" data-tab="settings">الإعدادات</button>
+  </nav>
+
+  <main>
+    <!-- المحادثة -->
+    <section id="page-chat" class="tab-page active">
+      <div id="chat-log" class="chat-log"></div>
+      <div class="chips">
+        <button class="chip" data-cmd="ابحث عن الذكاء الاصطناعي">🔍 ابحث عن…</button>
+        <button class="chip" data-cmd="ارسم صورة قطة فضائية">🎨 ارسم صورة</button>
+        <button class="chip" data-cmd="حول لسيناريو: كان يا ما كان في قديم الزمان تاجر صالح له ابن شجاع. سافر الابن بحثًا عن الرزق. عاد بالخير الكثير.">🎬 قصة → سيناريو</button>
+        <button class="chip" data-cmd="احفظ إني بفضل الرد بالمصري">🧠 احفظ في الذاكرة</button>
+        <button class="chip" data-cmd="ايه اللي في الذاكرة">📋 اعرض الذاكرة</button>
+      </div>
+      <div class="input-row">
+        <button id="mic-btn" class="mic-btn" aria-label="تشغيل الميكروفون">🎙️</button>
+        <input id="text-input" type="text" placeholder="اكتب أو قل أمرك…" autocomplete="off" />
+        <button id="send-btn" class="send-btn" aria-label="إرسال">➤</button>
+        <button id="stop-btn" class="stop-btn" aria-label="إيقاف فوري">⏹</button>
+      </div>
+    </section>
+
+    <!-- المهام -->
+    <section id="page-tasks" class="tab-page">
+      <div class="page-head">
+        <h2>سجل المهام</h2>
+        <button id="clear-tasks" class="btn small danger">مسح السجل</button>
+      </div>
+      <div id="tasks-list"></div>
+    </section>
+
+    <!-- الذاكرة -->
+    <section id="page-memory" class="tab-page">
+      <div class="page-head">
+        <h2>الذاكرة</h2>
+        <button id="clear-memory" class="btn small danger">مسح الذاكرة</button>
+      </div>
+      <div class="memory-add">
+        <input id="new-memory-text" type="text" placeholder="معلومة جديدة…" />
+        <select id="new-memory-cat"></select>
+        <button id="add-memory" class="btn small">إضافة</button>
+      </div>
+      <div id="memory-list"></div>
+    </section>
+
+    <!-- الأدوات -->
+    <section id="page-tools" class="tab-page">
+      <div class="page-head"><h2>الأدوات</h2></div>
+      <div id="tools-list"></div>
+    </section>
+
+    <!-- الإعدادات -->
+    <section id="page-settings" class="tab-page">
+      <div class="page-head"><h2>الإعدادات</h2></div>
+      <div class="card">
+        <h3>النموذج الذكي (OpenRouter)</h3>
+        <label>مفتاح API
+          <input id="set-openrouter-key" type="password" placeholder="sk-or-…" autocomplete="off" />
+        </label>
+        <label>النموذج (اختياري)
+          <input id="set-openrouter-model" type="text" placeholder="google/gemini-2.0-flash-001" />
+        </label>
+        <p class="muted">المفتاح يُحفظ على جهازك فقط ولا يوجد أي مفتاح داخل الكود. بدون مفتاح يعمل المساعد بقواعد مدمجة.</p>
+      </div>
+      <div class="card">
+        <h3>الصوت</h3>
+        <label>لغة الاستماع
+          <select id="set-language">
+            <option value="ar-EG">العربية — مصر</option>
+            <option value="ar-SA">العربية الفصحى</option>
+            <option value="en-US">English</option>
+          </select>
+        </label>
+        <label>سرعة النطق
+          <input id="set-voice-rate" type="range" min="0.5" max="1.8" step="0.1" value="1" />
+        </label>
+        <label class="row">
+          <input id="set-tts" type="checkbox" checked /> الرد بالصوت
+        </label>
+      </div>
+      <button id="save-settings" class="btn primary">حفظ الإعدادات</button>
+      <div class="card">
+        <h3>الاتصالات</h3>
+        <div id="connections-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
