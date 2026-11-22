@@ -480,6 +480,7 @@ addMessage('assistant',
 );
 
 // تسجيل الـ Service Worker (PWA) — يتجاهل الفشل بهدوء على file://
+// updateViaCache:'none' حتى يتحقق المتصفح من وجود نسخة أحدث في كل زيارة
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
+  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(() => {});
 }
