@@ -274,7 +274,7 @@ export function createAgent({ tools, memory, tasks, llm = null, onEvent = () => 
     const lines = [];
     if (llmReply) lines.push(llmReply);
     for (const r of results) {
-      if (r.ok) lines.push('✅ ' + summarizeResult(r.tool, r.result));
+      if (r.ok) lines.push((r.result?.status === 'needs-service' ? '⚠ ' : r.result?.ok === false ? '❌ ' : '✅ ') + summarizeResult(r.tool, r.result));
       else lines.push('❌ ' + r.tool + ': ' + r.error);
     }
     return lines.join('\n');
