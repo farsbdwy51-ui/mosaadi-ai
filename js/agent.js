@@ -70,7 +70,7 @@ export function buildPlan(intent, text, deps = {}) {
   const t = String(text || '').trim();
   switch (intent) {
     case 'remember': {
-      const body = t.replace(/^(اتذكر|احفظ|خزن|افتكر)\s*(أن|إن|انه|ان)?\s*/, '').trim();
+      const body = t.replace(/^(اتذكر|احفظ|خزن|افتكر)\s+(?:(?:أن|إن|انه|ان)\s+)?/, '').trim();
       const category = /(أسلوب|كلام|اسلوب)/.test(t) ? 'أسلوب الكلام'
         : /(مشروع|مشاريع)/.test(t) ? 'مشاريع'
         : /(مهمة|مهام|مطلوب)/.test(t) ? 'مهام'
