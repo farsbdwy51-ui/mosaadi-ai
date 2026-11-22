@@ -6,7 +6,7 @@ import { createToolRegistry, CODE_RUNNER_WORKER_SOURCE } from './tools.js';
 import { createAgent, detectIntent } from './agent.js';
 import { createSpeech } from './speech.js';
 import { createSettings, CONNECTIONS } from './settings.js';
-import { createLLM } from './llm.js';
+import { createLLM } from './llm.js?v=team1';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -76,10 +76,9 @@ teamPanel.className = 'card';
 teamPanel.setAttribute('aria-label', 'فريق المهام');
 teamPanel.innerHTML = `<h3>فريق المهام</h3>
 <label class="row"><input id="team-toggle" type="checkbox" checked /> تشغيل الفريق</label>
-<p class="muted">مدير يقسّم، منفّذ يستخدم الأدوات، ومراجع يفحص الأخطاء. بدون مفتاح: قواعد محلية، مش ٣ عقول ذكية.</p>
 <div aria-live="polite"><p data-role="planner">المدير: جاهز</p><p data-role="executor">المنفّذ: جاهز</p><p data-role="reviewer">المراجع: جاهز</p></div>
-<p class="muted">جرّب: احفظ إني بحب القهوة ثم ايه اللي في الذاكرة</p>
-<p class="muted">الصفحة لازم تفضل مفتوحة. مفيش تحكم كامل في الموبايل ولا إرسال رسائل أو دفع. المراجع مش ضمان خلو النتيجة من الأخطاء.</p>`;
+<details><summary>مثال وحدود الفريق</summary><p class="muted">بدون مفتاح: قواعد محلية، مش ٣ عقول ذكية. جرّب: احفظ إني بحب القهوة ثم ايه اللي في الذاكرة</p>
+<p class="muted">الصفحة لازم تفضل مفتوحة. مفيش تحكم كامل في الموبايل ولا إرسال رسائل أو دفع. المراجع مش ضمان خلو النتيجة من الأخطاء.</p></details>`;
 document.querySelector('#page-chat').prepend(teamPanel);
 const teamToggle = teamPanel.querySelector('#team-toggle');
 teamToggle.checked = settings.getAll().teamMode !== false;
@@ -601,4 +600,4 @@ function createTeamAgent(deps) {
       } finally { running = false; }
     },
   };
-      }
+            }
