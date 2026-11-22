@@ -1,7 +1,7 @@
 // scripts/smoke-test.mjs — فحص تفاعلي حقيقي للواجهة عبر Chrome headless
 import puppeteer from '/tmp/node_modules/puppeteer-core/lib/puppeteer/puppeteer-core.js';
 
-const BASE = 'http://localhost:8090';
+const BASE = 'http://localhost:8091';
 const SHOT = '/downloads';
 
 const browser = await puppeteer.launch({
@@ -74,6 +74,14 @@ await new Promise((r) => setTimeout(r, 400));
 await page.screenshot({ path: `${SHOT}/mosaadi-screenshot-5-settings.png` });
 const connText = await page.$eval('#connections-list', (el) => el.textContent);
 console.log('connections ok:', connText.includes('OpenRouter') && connText.includes('Google'));
+
+// 8ب) ضوابط الخصوصية الجديدة
+const shareToggle = await page.$('#set-share-memory');
+const shareChecked = await page.$eval('#set-share-memory', (el) => el.checked);
+const settingsText = await page.$eval('#page-settings', (el) => el.textContent);
+console.log('share-memory toggle ok:', !!shareToggle && shareChecked === false);
+console.log('disclosure ok:', settingsText.includes('OpenRouter') && settingsText.includes('خدمة خارجية'));
+console.log('code-preview note ok:', settingsText.includes('لا يُنفَّذ إلا بضغطة منك'));
 
 // 9) زر الإيقاف
 await page.click('[data-tab="chat"]');

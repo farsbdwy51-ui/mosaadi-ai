@@ -170,6 +170,73 @@ test('الإيقاف الفوري يوقف الخطوات التالية', async
   assert.equal(executed, 1); // الخطوة الثانية لم تبدأ
 });
 
+test('الخصوصية: الذاكرة لا تُرسل للنموذج بدون موافقة صريحة', async () => {
+  const memory = createMemoryStore(memAdapter());
+  memory.add('عام', 'سر خاص جدا');
+  const tasks = createTaskStore(memAdapter());
+  const tools = createToolRegistry();
+  let capturedPrompt = '';
+  const llm = {
+    isAvailable: () => true,
+    complete: async (p) => { capturedPrompt = p; return JSON.stringify({ steps: [], reply: 'رد' }); },
+  };
+  const agent = createAgent({ tools, memory, tasks, llm, onEvent: () => {} });
+  agent.setContext({ memory, tasks });
+  await agent.handle('عامل ايه النهارده');
+  assert.ok(!capturedPrompt.includes('سر خاص جدا'), 'الذاكرة تسرّبت للنموذج بدون موافقة');
+
+  // مع الموافقة الصريحة تُرسل
+  const agent2 = createAgent({ tools, memory, tasks, llm, onEvent: () => {}, getPrefs: () => ({ shareMemory: true }) });
+  agent2.setContext({ memory, tasks });
+  await agent2.handle('عامل ايه النهارده');
+  assert.ok(capturedPrompt.includes('سر خاص جدا'), 'الذاكرة لم تُرسل رغم الموافقة');
+});
+
+test('النموذج لا يستطيع اختيار run_code ضمن خطته', async () => {
+  const memory = createMemoryStore(memAdapter());
+  const tasks = createTaskStore(memAdapter());
+  const tools = createToolRegistry();
+  let ran = 0;
+  const llm = {
+    isAvailable: () => true,
+    complete: async () => JSON.stringify({ steps: [{ tool: 'run_code', args: { code: 'globalThis.pwned=1' } }], reply: '' }),
+  };
+  const agent = createAgent({ tools, memory, tasks, llm, onEvent: () => {} });
+  agent.setContext({ memory, tasks, runCode: async () => { ran++; return { ok: true }; } });
+  const r = await agent.handle('نفذ شيئًا');
+  assert.equal(ran, 0, 'نُفّذ كود اختاره النموذج');
+  assert.equal(r.task.steps.length, 0);
+  assert.equal(r.status, 'done');
+});
+
+test('كود النموذج معاينة فقط — لا تنفيذ تلقائي', async () => {
+  const memory = createMemoryStore(memAdapter());
+  const tasks = createTaskStore(memAdapter());
+  const tools = createToolRegistry();
+  let ran = 0;
+  const llm = {
+    isAvailable: () => true,
+    complete: async () => 'console.log("hello")',
+  };
+  const agent = createAgent({ tools, memory, tasks, llm, onEvent: () => {} });
+  agent.setContext({ memory, tasks, runCode: async () => { ran++; return { ok: true }; } });
+  const r = await agent.handle('اكتب كود يطبع مرحبا');
+  assert.equal(r.status, 'done');
+  assert.equal(ran, 0, 'نُفّذ كود النموذج تلقائيًا');
+  const step = r.task.steps[0];
+  assert.equal(step.result.status, 'preview');
+  assert.equal(step.result.needsConfirm, true);
+  assert.ok(step.result.code.includes('console.log'));
+  assert.ok(r.report.includes('راجعه'));
+});
+
+test('كود المستخدم نفسه يُنفّذ عند طلبه صراحة', async () => {
+  const { agent } = makeAgent({ runCode: async (code) => ({ ok: true, logs: ['1'], result: '1', code }) });
+  const r = await agent.handle('شغل الكود ده ```console.log(1)```');
+  assert.equal(r.status, 'done');
+  assert.ok(r.report.includes('بنجاح'));
+});
+
 test('LLM: رد غير JSON يسقط بهدوء إلى القواعد', async () => {
   const memory = createMemoryStore(memAdapter());
   const tasks = createTaskStore(memAdapter());

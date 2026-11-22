@@ -118,7 +118,7 @@ export function buildPlan(intent, text, deps = {}) {
 
 // ---------- الوكيل ----------
 
-export function createAgent({ tools, memory, tasks, llm = null, onEvent = () => {} }) {
+export function createAgent({ tools, memory, tasks, llm = null, onEvent = () => {}, getPrefs = () => ({}) }) {
   let aborted = false;
   let running = false;
 
@@ -130,10 +130,17 @@ export function createAgent({ tools, memory, tasks, llm = null, onEvent = () => 
     return running;
   }
 
+  // أدوات لا يجوز للنموذج اختيارها تلقائيًا (تتطلب موافقة المستخدم الصريحة)
+  const MODEL_FORBIDDEN_TOOLS = new Set(['run_code']);
+
   async function llmPlan(text) {
     // يطلب من النموذج خطة JSON مقيّدة بالأدوات المتاحة
-    const toolList = tools.list().map((t) => `${t.name}: ${t.descAr}`).join('\n');
-    const memSummary = memory.summary();
+    const toolList = tools.list()
+      .filter((t) => !MODEL_FORBIDDEN_TOOLS.has(t.name))
+      .map((t) => `${t.name}: ${t.descAr}`).join('\n');
+    // الخصوصية: لا تُرسل الذاكرة المحفوظة إلى الخدمة الخارجية إلا بموافقة صريحة من الإعدادات
+    const shareMemory = Boolean(getPrefs().shareMemory);
+    const memSummary = shareMemory ? memory.summary() : '';
     const sys = [
       'أنت مساعد شخصي ينفّذ مهام عبر أدوات. أجب بخطة JSON فقط بهذا الشكل:',
       '{"steps":[{"tool":"اسم_الأداة","args":{...}}],"reply":"رد قصير بالعربية"}',
@@ -146,16 +153,13 @@ export function createAgent({ tools, memory, tasks, llm = null, onEvent = () => 
     if (!m) throw new Error('رد النموذج ليس JSON');
     const parsed = JSON.parse(m[0]);
     const steps = Array.isArray(parsed.steps) ? parsed.steps : [];
-    // تجاهل أدوات غير موجودة
-    const safe = steps.filter((s) => s && tools.has(s.tool));
+    // تجاهل أدوات غير موجودة أو محظورة على النموذج
+    const safe = steps.filter((s) => s && tools.has(s.tool) && !MODEL_FORBIDDEN_TOOLS.has(s.tool));
     return { steps: safe, reply: typeof parsed.reply === 'string' ? parsed.reply : '' };
   }
 
   async function executeStep(step) {
-    const tool = tools.get(step.tool);
-    if (!tool) throw new Error('أداة غير معروفة: ' + step.tool);
-
-    // أدوات مركبة: توليد محتوى بالنموذج ثم أداة حقيقية
+    // أدوات مركبة افتراضية (ليست في السجل): توليد محتوى بالنموذج
     if (step.tool === 'chat_compose_code') {
       if (!llm || !llm.isAvailable()) {
         throw new Error('كتابة الكود تحتاج مفتاح OpenRouter — أضِفه من الإعدادات');
@@ -165,8 +169,8 @@ export function createAgent({ tools, memory, tasks, llm = null, onEvent = () => 
         { maxTokens: 1200 }
       );
       const clean = code.replace(/```(?:js|javascript)?/g, '').trim();
-      const runTool = tools.get('run_code');
-      return runTool.run({ code: clean }, ctx);
+      // لا تنفيذ تلقائي لكود يولّده النموذج — معاينة فقط، والتشغيل بزر من المستخدم
+      return { status: 'preview', needsConfirm: true, code: clean };
     }
     if (step.tool === 'chat_compose_document') {
       if (!llm || !llm.isAvailable()) {
@@ -180,6 +184,8 @@ export function createAgent({ tools, memory, tasks, llm = null, onEvent = () => 
       const title = (step.args.request.match(/(?:ملف|مستند|تقرير|جدول)\s+(\S+)/) || [])[1] || 'مستند';
       return docTool.run({ title, content, format: 'md' }, ctx);
     }
+    const tool = tools.get(step.tool);
+    if (!tool) throw new Error('أداة غير معروفة: ' + step.tool);
     return tool.run(step.args || {}, ctx);
   }
 
@@ -299,6 +305,11 @@ export function createAgent({ tools, memory, tasks, llm = null, onEvent = () => 
       case 'recall': return result.count ? 'المحفوظ في الذاكرة:\n' + result.summary : 'الذاكرة فارغة حاليًا.';
       case 'youtube_content': return result.content;
       case 'make_plan': return 'الخطة جاهزة.';
+      case 'chat_compose_code':
+        if (result.status === 'preview') {
+          return 'كتبت الكود المطلوب — راجعه بالأسفل واضغط «تشغيل» إذا أردت تنفيذه (كود من نموذج خارجي لا يُنفَّذ تلقائيًا).';
+        }
+        return 'تم.';
       default:
         if (result.status === 'needs-service') return result.message;
         return JSON.stringify(result);

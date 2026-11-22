@@ -78,6 +78,7 @@ const agent = createAgent({
   tasks,
   llm,
   onEvent: handleAgentEvent,
+  getPrefs: () => ({ shareMemory: settings.getAll().llmShareMemory === true }),
 });
 
 agent.setContext({ memory, tasks, llm, download, openTab, fetchJson, runCode });
@@ -130,6 +131,44 @@ function addMessage(role, text, { images = [] } = {}) {
   log.scrollTop = log.scrollHeight;
 }
 
+function renderCodePreviews(task) {
+  for (const step of (task && task.steps) || []) {
+    const r = step.result;
+    if (step.status === 'done' && r && r.needsConfirm && r.code) {
+      const card = document.createElement('div');
+      card.className = 'msg assistant';
+      const pre = document.createElement('pre');
+      pre.className = 'code-preview';
+      pre.textContent = r.code;
+      const btn = document.createElement('button');
+      btn.className = 'btn small primary-inline';
+      btn.textContent = '▶ تشغيل الكود';
+      const out = document.createElement('div');
+      out.className = 'code-output muted';
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        out.textContent = 'جارٍ التنفيذ…';
+        try {
+          const res = await runCode(r.code, 5000);
+          out.textContent = res.ok
+            ? '✅ نجح التنفيذ.' + (res.result ? '\nالناتج: ' + res.result : '') + ((res.logs && res.logs.length) ? '\nالسجل:\n' + res.logs.join('\n') : '')
+            : '❌ فشل التنفيذ: ' + res.error;
+        } catch (e) {
+          out.textContent = '❌ خطأ: ' + e.message;
+        }
+      });
+      const body = document.createElement('div');
+      body.className = 'msg-body';
+      body.appendChild(pre);
+      body.appendChild(btn);
+      body.appendChild(out);
+      card.appendChild(body);
+      $('#chat-log').appendChild(card);
+      $('#chat-log').scrollTop = $('#chat-log').scrollHeight;
+    }
+  }
+}
+
 function extractImages(task) {
   const urls = [];
   for (const step of (task && task.steps) || []) {
@@ -153,6 +192,7 @@ function handleAgentEvent(ev) {
       setStatus('idle');
       const images = extractImages(ev.task);
       addMessage('assistant', ev.report, { images });
+      renderCodePreviews(ev.task);
       const s = settings.getAll();
       if (s.ttsEnabled !== false) speech.speak(shortForSpeech(ev.report));
       renderTasks();
@@ -377,6 +417,7 @@ function renderSettings() {
   $('#set-language').value = s.language || 'ar-EG';
   $('#set-voice-rate').value = s.voiceRate || 1;
   $('#set-tts').checked = s.ttsEnabled !== false;
+  $('#set-share-memory').checked = s.llmShareMemory === true;
 }
 
 $('#save-settings').addEventListener('click', () => {
@@ -386,6 +427,7 @@ $('#save-settings').addEventListener('click', () => {
     language: $('#set-language').value,
     voiceRate: Number($('#set-voice-rate').value) || 1,
     ttsEnabled: $('#set-tts').checked,
+    llmShareMemory: $('#set-share-memory').checked === true,
   });
   renderConnections();
   addMessage('system', 'تم حفظ الإعدادات ✓');

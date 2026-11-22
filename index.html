@@ -90,6 +90,10 @@
           <input id="set-openrouter-model" type="text" placeholder="google/gemini-2.0-flash-001" />
         </label>
         <p class="muted">المفتاح يُحفظ على جهازك فقط ولا يوجد أي مفتاح داخل الكود. بدون مفتاح يعمل المساعد بقواعد مدمجة.</p>
+        <p class="muted warn-note">⚠ عند إضافة المفتاح، يُرسَل نص طلباتك إلى OpenRouter — خدمة خارجية عبر الإنترنت. ذاكرتك المحفوظة لا تُرسَل أبدًا إلا إذا فعّلت الخيار التالي:</p>
+        <label class="row">
+          <input id="set-share-memory" type="checkbox" /> مشاركة ذاكرتي المحفوظة مع النموذج الخارجي
+        </label>
       </div>
       <div class="card">
         <h3>الصوت</h3>
@@ -106,6 +110,7 @@
         <label class="row">
           <input id="set-tts" type="checkbox" checked /> الرد بالصوت
         </label>
+        <p class="muted">أي كود يكتبه النموذج الخارجي يظهر للمعاينة فقط ولا يُنفَّذ إلا بضغطة منك.</p>
       </div>
       <button id="save-settings" class="btn primary">حفظ الإعدادات</button>
       <div class="card">

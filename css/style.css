@@ -386,3 +386,37 @@ input[type="range"] { width: 100%; margin-top: 10px; accent-color: var(--accent)
 }
 .conn-row:last-child { border-bottom: none; }
 .conn-icon { font-size: 1.05rem; line-height: 1.4; }
+
+.warn-note {
+  border-inline-start: 3px solid #eab308;
+  padding-inline-start: 10px;
+  margin-bottom: 12px;
+}
+
+.code-preview {
+  background: #0b1120;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 12px;
+  overflow-x: auto;
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  direction: ltr;
+  text-align: left;
+  white-space: pre;
+  margin-bottom: 10px;
+}
+
+.btn.primary-inline {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: var(--bg);
+  border: none;
+}
+.btn.primary-inline:disabled { opacity: 0.5; }
+
+.code-output {
+  margin-top: 10px;
+  white-space: pre-wrap;
+  line-height: 1.7;
+}
